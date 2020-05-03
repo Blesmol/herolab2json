@@ -7,12 +7,9 @@ import zipfile
 import os
 
 if len(sys.argv) != 2:
-    print('Invalid number of arguments: {}'.format(len(sys.argv)))
+    print ('Invalid number of arguments: {}'.format(len(sys.argv)))
     print('Usage: hl2json.py <HeroLab .por file>')
     sys.exit(1)
-
-def postprocess(path, key, value):
-    return key if key else "", value if value else ""
 
 hl_filename = sys.argv[1]
 hl_basename = os.path.splitext(hl_filename)[0]
@@ -37,5 +34,7 @@ with zipfile.ZipFile(hl_filename, 'r') as zip:
 
             json_filename = '{}.json'.format(base_output_filename)
             with open(json_filename, 'w') as json_file:
-                data_dict = xmltodict.parse(data, attr_prefix='_', postprocessor=postprocess)
+                data_dict = xmltodict.parse(data, attr_prefix='_', postprocessor=(
+                    lambda _, key, value: (key if key else "", value if value else ""))
+                )
                 json_file.write(json.dumps(data_dict, indent='\t'))
