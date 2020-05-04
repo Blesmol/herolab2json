@@ -17,5 +17,19 @@ This script takes a HeroLab ``*.por`` file for Pathfinder 1st Edition and create
 ## Usage ##
 
 ```
-hl2json.py <HeroLab File>
+hl2json.py [-h] [-j] [-x] [--html] [-t] [-d] file [file ...]
+
+Extract Pathfinder characters from HeroLab files and store them locally in
+various formats
+
+positional arguments:
+  file         HeroLab *.por file
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -j, --json   Extract JSON (Default if nothing else is selected)
+  -x, --xml    Extract XML Statblock
+  --html       Extract HTML Statblock
+  -t, --text   Extract text statblock
+  -d, --debug  Debug output
 ```
