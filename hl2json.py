@@ -10,10 +10,10 @@ import argparse
 def main():
     ap = argparse.ArgumentParser(description='Extract Pathfinder characters from HeroLab files and store them locally in various formats')
     ap.add_argument('file', help='HeroLab *.por file', nargs='+')
-    ap.add_argument('-j', '--json', help='Extract JSON (Default if nothing else is selected)', action='store_true')
-    ap.add_argument('-x', '--xml', help='Extract XML Statblock', action='store_true')
-    ap.add_argument(      '--html', help='Extract HTML Statblock', action='store_true')
-    ap.add_argument('-t', '--text', help='Extract text statblock', action='store_true')
+    ap.add_argument('-j', '--json',  help='Extract JSON (Default if nothing else is selected)', action='store_true')
+    ap.add_argument('-x', '--xml',   help='Extract XML Statblock', action='store_true')
+    ap.add_argument(      '--html',  help='Extract HTML Statblock', action='store_true')
+    ap.add_argument('-t', '--text',  help='Extract text statblock', action='store_true')
     ap.add_argument('-d', '--debug', help='Debug output', action='store_true')
     args = ap.parse_args()
 
