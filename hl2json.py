@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# TODO accept also xml input files and convert to json
+
 import xmltodict
 import json
 import sys
@@ -22,63 +24,73 @@ def main():
     if not args.xml and not args.html and not args.text:
         args.json = True
 
-    for hl_filename in args.file:
-        hl_basename = os.path.splitext(hl_filename)[0]
+    for filename in args.file:
+        file_ext = os.path.splitext(filename)[1]
 
-        assert zipfile.is_zipfile(hl_filename)
-        with zipfile.ZipFile(hl_filename, 'r') as zip:
-            num_chars = get_number_of_chars(zip) # not yet used
+        # TODO ensure that file exists
 
-            infolist = zip.infolist()
-            for entry in infolist:
-                if args.debug:
-                    print(str(entry))
+        if file_ext == '.por':
+            process_por(filename, args)
+        else:
+            print('File with unsupported extension: {}'.format(filename))
 
-                if not entry.filename.startswith('statblocks_'):
-                    continue
+def process_por(filename, args):
+    file_basename = os.path.splitext(filename)[0]
 
-                char_name = get_char_name(entry.filename)
-                if hl_basename != char_name:
-                    base_output_filename = '{} - {}'.format(hl_basename, char_name)
-                else:
-                    base_output_filename = hl_basename
+    assert zipfile.is_zipfile(filename)
+    with zipfile.ZipFile(filename, 'r') as zip:
+        num_chars = get_number_of_chars(zip) # not yet used
 
-                if args.html and entry.filename.startswith('statblocks_html'):
-                    extract_into_file(zip, entry.filename, base_output_filename, 'html')
+        infolist = zip.infolist()
+        for entry in infolist:
+            if args.debug:
+                print(str(entry))
 
-                if args.text and entry.filename.startswith('statblocks_text'):
-                    extract_into_file(zip, entry.filename, base_output_filename, 'txt')
+            if not entry.filename.startswith('statblocks_'):
+                continue
 
-                if args.xml and entry.filename.startswith('statblocks_xml'):
-                    extract_into_file(zip, entry.filename, base_output_filename, 'xml')
+            char_name = get_char_name(entry.filename)
+            if file_basename != char_name:
+                base_output_filename = '{} - {}'.format(file_basename, char_name)
+            else:
+                base_output_filename = file_basename
 
-                if args.json and entry.filename.startswith('statblocks_xml'):
-                    data = zip.read(entry.filename)
-                    char_dict = xmltodict.parse(data, attr_prefix='_', postprocessor=(
-                        lambda _, key, value: (key if key else "", value if value else ""))
-                    )
+            if args.html and entry.filename.startswith('statblocks_html'):
+                extract_into_file(zip, entry.filename, base_output_filename, 'html')
 
-                    json_filename = '{}.json'.format(base_output_filename)
-                    with open(json_filename, 'w') as json_file:
-                        json_file.write(json.dumps(char_dict, indent='\t'))
+            if args.text and entry.filename.startswith('statblocks_text'):
+                extract_into_file(zip, entry.filename, base_output_filename, 'txt')
 
-                    # check for minions; if one exists, extract into separate file
-                    # TODO check if multiple minions can exist for one char, and if so, how they are stored
-                    minion_dict = get_minions(char_dict)
-                    if minion_dict:
-                        minion_name = minion_dict['character']['_name']
-                        minion_json_filename = '{} - {}.json'.format(base_output_filename, minion_name)
+            if args.xml and entry.filename.startswith('statblocks_xml'):
+                extract_into_file(zip, entry.filename, base_output_filename, 'xml')
 
-                        # The dict is missing some expected entries for completeness. Lets be lazy, copy
-                        # the char dict and only replace the character with the minion
-                        minion_dict_complete = copy.deepcopy(char_dict)
-                        minion_dict_complete['document']['public']['character'] = minion_dict['character']
+            if args.json and entry.filename.startswith('statblocks_xml'):
+                data = zip.read(entry.filename)
+                char_dict = xmltodict.parse(data, attr_prefix='_', postprocessor=(
+                    lambda _, key, value: (key if key else "", value if value else ""))
+                )
 
-                        if args.debug:
-                            print('Minion {} exists for char {}'.format(minion_name, char_name))
-                        with open(minion_json_filename, 'w') as json_file:
-                            json_file.write(json.dumps(minion_dict_complete, indent='\t'))
+                json_filename = '{}.json'.format(base_output_filename)
+                with open(json_filename, 'w') as json_file:
+                    json_file.write(json.dumps(char_dict, indent='\t'))
 
+                # check for minions; if one exists, extract into separate file
+                # TODO check if multiple minions can exist for one char, and if so, how they are stored
+                minion_dict = get_minions(char_dict)
+                if minion_dict:
+                    minion_name = minion_dict['character']['_name']
+                    minion_json_filename = '{} - {}.json'.format(base_output_filename, minion_name)
+
+                    # The dict is missing some expected entries for completeness. Lets be lazy, copy
+                    # the char dict and only replace the character with the minion
+                    minion_dict_complete = copy.deepcopy(char_dict)
+                    minion_dict_complete['document']['public']['character'] = minion_dict['character']
+
+                    if args.debug:
+                        print('Minion {} exists for char {}'.format(minion_name, char_name))
+
+                    with open(minion_json_filename, 'w') as json_file:
+                        json_file.write(json.dumps(minion_dict_complete, indent='\t'))
 
 def extract_into_file(zip, zip_filename, output_basename, output_extension):
     output_filename = '{}.{}'.format(output_basename, output_extension)
