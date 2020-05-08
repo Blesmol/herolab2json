@@ -30,11 +30,28 @@ def main():
             sys.exit(1)
 
         file_ext = os.path.splitext(filename)[1]
-
         if file_ext == '.por':
             process_por(filename, args)
+        elif file_ext == '.xml':
+            process_xml(filename, args)
         else:
             print('File with unsupported extension: {}'.format(filename))
+
+def process_xml(filename, args):
+    # The only thing that we can currently do is convert to json.
+    # If that is not requested: leave
+    if not args.json:
+        return
+
+    file_basename = os.path.splitext(filename)[0]
+    file_output_name = '{}.json'.format(file_basename)
+
+    with open(filename, 'rb') as xml_file:
+        xml_data = xml_file.read()
+        json_data = convert_xml_to_json(xml_data)
+
+        with open(file_output_name, 'w') as json_file:
+            json_file.write(json_data)
 
 def process_por(filename, args):
     file_basename = os.path.splitext(filename)[0]
@@ -99,6 +116,13 @@ def extract_into_file(zip, zip_filename, output_basename, output_extension):
     with open(output_filename, 'wb') as file:
         data = zip.read(zip_filename)
         file.write(data)
+
+def convert_xml_to_json(xml_data):
+    char_dict = xmltodict.parse(xml_data, attr_prefix='_', postprocessor=(
+        lambda _, key, value: (key if key else "", value if value else ""))
+    )
+
+    return json.dumps(char_dict, indent='\t')
 
 def get_char_name(full_filename):
     filename = os.path.basename(full_filename)
