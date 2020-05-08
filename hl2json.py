@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# TODO accept also xml input files and convert to json
-
 import xmltodict
 import json
 import sys
