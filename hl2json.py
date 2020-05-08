@@ -25,9 +25,11 @@ def main():
         args.json = True
 
     for filename in args.file:
-        file_ext = os.path.splitext(filename)[1]
+        if not os.path.isfile(filename):
+            print('File {} not found, exiting'.format(filename))
+            sys.exit(1)
 
-        # TODO ensure that file exists
+        file_ext = os.path.splitext(filename)[1]
 
         if file_ext == '.por':
             process_por(filename, args)
